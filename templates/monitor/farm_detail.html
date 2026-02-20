@@ -35,33 +35,53 @@
 
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-cloud-sun"></i> Latest Weather</h5>
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-cloud-sun"></i> Latest Weather
+                {% if farm.last_weather_update %}
+                <small class="float-end">Updated: {{ farm.last_weather_update|timesince }} ago</small>
+                {% endif %}
+                </h5>
             </div>
             <div class="card-body">
                 {% if weather_records %}
                 {% with weather_records.0 as latest %}
+                <div class="text-center mb-3">
+                    <h6 class="text-muted">{{ latest.description|title }}</h6>
+                </div>
                 <div class="row text-center">
-                    <div class="col-4">
-                        <i class="bi bi-thermometer-half text-danger"></i>
-                        <p class="mb-0"><strong>{{ latest.temperature }}°C</strong></p>
-                        <small>Temperature</small>
+                    <div class="col-3">
+                        <i class="bi bi-thermometer-half text-danger" style="font-size: 2rem;"></i>
+                        <p class="mb-0"><strong style="font-size: 1.5rem;">{{ latest.temperature }}°C</strong></p>
+                        <small class="text-muted">Temperature</small>
                     </div>
-                    <div class="col-4">
-                        <i class="bi bi-droplet text-primary"></i>
-                        <p class="mb-0"><strong>{{ latest.humidity }}%</strong></p>
-                        <small>Humidity</small>
+                    <div class="col-3">
+                        <i class="bi bi-droplet text-primary" style="font-size: 2rem;"></i>
+                        <p class="mb-0"><strong style="font-size: 1.5rem;">{{ latest.humidity }}%</strong></p>
+                        <small class="text-muted">Humidity</small>
                     </div>
-                    <div class="col-4">
-                        <i class="bi bi-cloud-rain text-info"></i>
-                        <p class="mb-0"><strong>{{ latest.rainfall }} mm</strong></p>
-                        <small>Rainfall</small>
+                    <div class="col-3">
+                        <i class="bi bi-cloud-rain text-info" style="font-size: 2rem;"></i>
+                        <p class="mb-0"><strong style="font-size: 1.5rem;">{{ latest.rainfall }}</strong></p>
+                        <small class="text-muted">Rainfall (mm)</small>
+                    </div>
+                    <div class="col-3">
+                        <i class="bi bi-wind text-success" style="font-size: 2rem;"></i>
+                        <p class="mb-0"><strong style="font-size: 1.5rem;">{{ latest.wind_speed }}</strong></p>
+                        <small class="text-muted">Wind (m/s)</small>
                     </div>
                 </div>
-                <p class="text-center mt-2 mb-0 small text-muted">{{ latest.date }}</p>
+                <p class="text-center mt-3 mb-0 small text-muted">
+                    <i class="bi bi-calendar"></i> {{ latest.date|date:"M d, Y" }} at {{ latest.created_at|time:"H:i" }}
+                </p>
                 {% endwith %}
                 {% else %}
-                <p class="text-muted">No weather data yet. Click "Update Weather" to fetch current data.</p>
+                <div class="text-center py-4">
+                    <i class="bi bi-cloud-slash text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No weather data yet.</p>
+                    <a href="{% url 'weather_update' farm.id %}" class="btn btn-info btn-sm">
+                        <i class="bi bi-cloud-download"></i> Fetch Weather Now
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>

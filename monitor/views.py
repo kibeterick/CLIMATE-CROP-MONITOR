@@ -161,14 +161,29 @@ def farm_create(request):
             soil_type=request.POST.get('soil_type', '')
         )
         
-        # Try to get coordinates from weather API
-        weather_data = WeatherService.get_weather_by_city(request.POST['location'])
-        if weather_data:
-            farm.latitude = weather_data['latitude']
-            farm.longitude = weather_data['longitude']
-            farm.save()
+        # Always try to get coordinates from weather API
+        try:
+            weather_data = WeatherService.get_weather_by_city(request.POST['location'])
+            if weather_data:
+                farm.latitude = weather_data['latitude']
+                farm.longitude = weather_data['longitude']
+                farm.save()
+                
+                # Create initial weather record
+                WeatherRecord.objects.create(
+                    farm=farm,
+                    temperature=weather_data['temperature'],
+                    humidity=weather_data['humidity'],
+                    rainfall=weather_data['rainfall'],
+                    wind_speed=weather_data['wind_speed'],
+                    description=weather_data['description']
+                )
+                messages.success(request, f'Farm created with weather data! Current temp: {weather_data["temperature"]}°C')
+            else:
+                messages.success(request, 'Farm created! Click "Update Weather" to fetch weather data.')
+        except Exception as e:
+            messages.success(request, 'Farm created! Click "Update Weather" to fetch weather data.')
         
-        messages.success(request, 'Farm created successfully!')
         return redirect('farm_detail', farm_id=farm.id)
     
     return render(request, 'monitor/farm_form.html')
@@ -235,11 +250,19 @@ def weather_update(request, farm_id):
     """Fetch and update weather data for a farm"""
     farm = get_object_or_404(Farm, id=farm_id, farmer=request.user.farmer)
     
+    # Try to get coordinates if not set
+    if not farm.latitude or not farm.longitude:
+        weather_data = WeatherService.get_weather_by_city(farm.location)
+        if weather_data:
+            farm.latitude = weather_data['latitude']
+            farm.longitude = weather_data['longitude']
+            farm.save()
+    
     if farm.latitude and farm.longitude:
         weather_data = WeatherService.get_weather_data(farm.latitude, farm.longitude)
         
         if weather_data:
-            WeatherRecord.objects.create(
+            weather_record = WeatherRecord.objects.create(
                 farm=farm,
                 temperature=weather_data['temperature'],
                 humidity=weather_data['humidity'],
@@ -247,6 +270,9 @@ def weather_update(request, farm_id):
                 wind_speed=weather_data['wind_speed'],
                 description=weather_data['description']
             )
+            
+            farm.last_weather_update = timezone.now()
+            farm.save(update_fields=['last_weather_update'])
             
             # Check for weather alerts
             if weather_data['temperature'] > 35:
@@ -257,12 +283,20 @@ def weather_update(request, farm_id):
                     title='High Temperature Alert',
                     message=f'Temperature is {weather_data["temperature"]}°C. Consider irrigation.'
                 )
+            elif weather_data['temperature'] < 10:
+                Alert.objects.create(
+                    farm=farm,
+                    alert_type='weather',
+                    severity='medium',
+                    title='Low Temperature Alert',
+                    message=f'Temperature is {weather_data["temperature"]}°C. Protect sensitive crops.'
+                )
             
-            messages.success(request, 'Weather data updated successfully!')
+            messages.success(request, f'Weather updated! Temp: {weather_data["temperature"]}°C, Humidity: {weather_data["humidity"]}%')
         else:
-            messages.error(request, 'Failed to fetch weather data. Check API key.')
+            messages.error(request, 'Failed to fetch weather data. Using demo data.')
     else:
-        messages.error(request, 'Farm coordinates not set.')
+        messages.warning(request, f'Could not find coordinates for {farm.location}. Please update farm location.')
     
     return redirect('farm_detail', farm_id=farm.id)
 
