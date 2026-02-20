@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-geo-alt"></i> {{ farm.name }}</h2>
+    <div>
+        <a href="{% url 'weather_update' farm.id %}" class="btn btn-info">
+            <i class="bi bi-cloud-download"></i> Update Weather
+        </a>
+        <a href="{% url 'crop_create' farm.id %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Add Crop
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Farm Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Location:</strong> {{ farm.location }}</p>
+                <p><strong>Size:</strong> {{ farm.size_acres }} acres</p>
+                {% if farm.soil_type %}
+                <p><strong>Soil Type:</strong> {{ farm.soil_type }}</p>
+                {% endif %}
+                {% if farm.latitude and farm.longitude %}
+                <p><strong>Coordinates:</strong> {{ farm.latitude }}, {{ farm.longitude }}</p>
+                {% endif %}
+                <p><strong>Created:</strong> {{ farm.created_at|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-cloud-sun"></i> Latest Weather</h5>
+            </div>
+            <div class="card-body">
+                {% if weather_records %}
+                {% with weather_records.0 as latest %}
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="bi bi-thermometer-half text-danger"></i>
+                        <p class="mb-0"><strong>{{ latest.temperature }}°C</strong></p>
+                        <small>Temperature</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="bi bi-droplet text-primary"></i>
+                        <p class="mb-0"><strong>{{ latest.humidity }}%</strong></p>
+                        <small>Humidity</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="bi bi-cloud-rain text-info"></i>
+                        <p class="mb-0"><strong>{{ latest.rainfall }} mm</strong></p>
+                        <small>Rainfall</small>
+                    </div>
+                </div>
+                <p class="text-center mt-2 mb-0 small text-muted">{{ latest.date }}</p>
+                {% endwith %}
+                {% else %}
+                <p class="text-muted">No weather data yet. Click "Update Weather" to fetch current data.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-flower1"></i> Crops ({{ crops.count }})</h5>
+    </div>
+    <div class="card-body">
+        {% if crops %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Crop Type</th>
+                        <th>Variety</th>
+                        <th>Planting Date</th>
+                        <th>Area (acres)</th>
+                        <th>Growth Stage</th>
+                        <th>Days</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for crop in crops %}
+                    <tr>
+                        <td>{{ crop.get_crop_type_display }}</td>
+                        <td>{{ crop.variety|default:"N/A" }}</td>
+                        <td>{{ crop.planting_date }}</td>
+                        <td>{{ crop.area_planted }}</td>
+                        <td><span class="badge bg-info">{{ crop.get_current_stage_display }}</span></td>
+                        <td>{{ crop.days_since_planting }}</td>
+                        <td>
+                            <a href="{% url 'crop_detail' crop.id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No crops registered yet.</p>
+        <a href="{% url 'crop_create' farm.id %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Add First Crop
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if alerts %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-bell"></i> Recent Alerts</h5>
+    </div>
+    <div class="card-body">
+        <ul class="list-group">
+            {% for alert in alerts %}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="badge bg-{{ alert.severity }} me-2">{{ alert.get_severity_display }}</span>
+                        <strong>{{ alert.title }}</strong>
+                        <p class="mb-0 mt-1">{{ alert.message }}</p>
+                        <small class="text-muted">{{ alert.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    {% if not alert.is_read %}
+                    <a href="{% url 'alert_mark_read' alert.id %}" class="btn btn-sm btn-outline-secondary">Mark Read</a>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{% url 'farm_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Farms
+    </a>
+</div>
+{% endblock %}

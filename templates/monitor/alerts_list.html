@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-bell"></i> Alerts & Notifications</h2>
+
+{% if alerts %}
+<div class="row">
+    {% for alert in alerts %}
+    <div class="col-md-6 mb-3">
+        <div class="card {% if not alert.is_read %}border-{{ alert.severity }}{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="badge bg-{{ alert.severity }} me-2">{{ alert.get_severity_display }}</span>
+                        <span class="badge bg-secondary">{{ alert.get_alert_type_display }}</span>
+                    </div>
+                    {% if not alert.is_read %}
+                    <span class="badge bg-danger">New</span>
+                    {% endif %}
+                </div>
+                <h5 class="mt-3">{{ alert.title }}</h5>
+                <p class="mb-2">{{ alert.message }}</p>
+                <small class="text-muted">
+                    <i class="bi bi-geo-alt"></i> {{ alert.farm.name }} | 
+                    <i class="bi bi-clock"></i> {{ alert.created_at|date:"M d, Y H:i" }}
+                </small>
+                {% if not alert.is_read %}
+                <div class="mt-3">
+                    <a href="{% url 'alert_mark_read' alert.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-check"></i> Mark as Read
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <h5><i class="bi bi-info-circle"></i> No Alerts</h5>
+    <p class="mb-0">You don't have any alerts at this time. Alerts will appear here when weather conditions or crop stages require attention.</p>
+</div>
+{% endif %}
+
+<div class="mt-3">
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+{% endblock %}

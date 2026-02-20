@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+    <div>
+        <a href="{% url 'batch_update_weather' %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-cloud-download"></i> Update Weather
+        </a>
+        <a href="{% url 'batch_update_crop_stages' %}" class="btn btn-sm btn-success">
+            <i class="bi bi-arrow-repeat"></i> Update Stages
+        </a>
+        <a href="{% url 'export_crops' %}" class="btn btn-sm btn-info">
+            <i class="bi bi-download"></i> Export Data
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-geo-alt"></i> Total Farms</h5>
+                <h2>{{ total_farms }}</h2>
+                <small>{{ total_area|floatformat:1 }} acres total</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-flower1"></i> Active Crops</h5>
+                <h2>{{ total_crops }}</h2>
+                <small>{{ planted_area|floatformat:1 }} acres planted</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-bell"></i> Alerts</h5>
+                <h2>{{ total_unread_alerts }}</h2>
+                <small>Unread notifications</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-person"></i> Farmer</h5>
+                <p class="mb-0">{{ farmer.county }}</p>
+                <small>{{ farmer.user.get_full_name|default:farmer.user.username }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if crops_by_stage %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Crop Growth Overview</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for stage_name, count in crops_by_stage.items %}
+            <div class="col-md-2">
+                <div class="text-center p-2 border rounded">
+                    <h4 class="text-success">{{ count }}</h4>
+                    <small class="text-muted">{{ stage_name }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-cloud-sun"></i> Current Weather</h5>
+            </div>
+            <div class="card-body">
+                {% if current_weather %}
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="bi bi-thermometer-half display-4 text-danger"></i>
+                        <p class="mb-0"><strong>{{ current_weather.temperature }}°C</strong></p>
+                        <small>Temperature</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="bi bi-droplet display-4 text-primary"></i>
+                        <p class="mb-0"><strong>{{ current_weather.humidity }}%</strong></p>
+                        <small>Humidity</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="bi bi-wind display-4 text-info"></i>
+                        <p class="mb-0"><strong>{{ current_weather.wind_speed }} m/s</strong></p>
+                        <small>Wind Speed</small>
+                    </div>
+                </div>
+                <p class="text-center mt-3 mb-0">{{ current_weather.description|title }}</p>
+                {% else %}
+                <p class="text-muted">No weather data available. Add a farm with location to see weather.</p>
+                <a href="{% url 'farm_create' %}" class="btn btn-primary btn-sm">Add Farm</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bell"></i> Recent Alerts</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_alerts %}
+                <ul class="list-group list-group-flush">
+                    {% for alert in recent_alerts %}
+                    <li class="list-group-item">
+                        <span class="badge bg-{{ alert.severity }} float-end">{{ alert.get_severity_display }}</span>
+                        <strong>{{ alert.title }}</strong>
+                        <p class="mb-0 small text-muted">{{ alert.message|truncatewords:15 }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <a href="{% url 'alerts_list' %}" class="btn btn-sm btn-outline-primary mt-2">View All</a>
+                {% else %}
+                <p class="text-muted">No alerts at this time.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-flower1"></i> Active Crops</h5>
+        {% if total_farms > 0 %}
+        <a href="{% url 'farm_list' %}" class="btn btn-sm btn-light">Manage Crops</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if active_crops %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Crop Type</th>
+                        <th>Farm</th>
+                        <th>Planting Date</th>
+                        <th>Growth Stage</th>
+                        <th>Days</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for crop in active_crops %}
+                    <tr>
+                        <td><i class="bi bi-flower1 text-success"></i> {{ crop.get_crop_type_display }}</td>
+                        <td>{{ crop.farm.name }}</td>
+                        <td>{{ crop.planting_date }}</td>
+                        <td><span class="badge bg-info">{{ crop.get_current_stage_display }}</span></td>
+                        <td>{{ crop.days_since_planting }} days</td>
+                        <td>
+                            <a href="{% url 'crop_detail' crop.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No active crops. Start by adding a farm and registering crops.</p>
+        <a href="{% url 'farm_create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Farm
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
