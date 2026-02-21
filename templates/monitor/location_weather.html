@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-geo-alt-fill"></i> Location Weather Finder</h2>
+            <p class="text-muted">Find weather information for any location or use your current location</p>
+        </div>
+    </div>
+
+    <!-- Location Detection and Search -->
+    <div class="row mb-4">
+        <!-- Current Location -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-crosshair"></i> Use My Current Location</h5>
+                </div>
+                <div class="card-body text-center">
+                    <i class="bi bi-geo-alt" style="font-size: 4rem; color: #0d6efd;"></i>
+                    <p class="mt-3">Click the button below to detect your current location and get weather information</p>
+                    
+                    <!-- Troubleshooting Tips -->
+                    <div class="alert alert-warning text-start small mb-3">
+                        <strong><i class="bi bi-lightbulb"></i> Before clicking:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Enable location services on your device</li>
+                            <li>Allow location access when browser asks</li>
+                            <li>Make sure you have internet connection</li>
+                            <li>If it fails, try the search feature instead</li>
+                        </ul>
+                    </div>
+                    
+                    <button id="detectLocationBtn" class="btn btn-primary btn-lg">
+                        <i class="bi bi-crosshair"></i> Detect My Location
+                    </button>
+                    <div id="locationStatus" class="mt-3"></div>
+                    
+                    <!-- Manual Coordinate Entry (Fallback) -->
+                    <div class="mt-4 pt-3 border-top">
+                        <p class="text-muted small mb-2">Or enter coordinates manually:</p>
+                        <form method="post" action="{% url 'current_location_weather' %}">
+                            {% csrf_token %}
+                            <div class="row g-2">
+                                <div class="col-5">
+                                    <input type="number" step="0.0001" class="form-control form-control-sm" 
+                                           name="latitude" placeholder="Latitude" required>
+                                </div>
+                                <div class="col-5">
+                                    <input type="number" step="0.0001" class="form-control form-control-sm" 
+                                           name="longitude" placeholder="Longitude" required>
+                                </div>
+                                <div class="col-2">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary w-100">Go</button>
+                                </div>
+                            </div>
+                            <small class="text-muted">Example: -1.2921, 36.8219 (Nairobi)</small>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Location -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-search"></i> Search for a Location</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'search_location_weather' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="locationSearch" class="form-label">Enter City, Town, or Place Name</label>
+                            <input type="text" class="form-control form-control-lg" id="locationSearch" 
+                                   name="location_search" placeholder="e.g., Nairobi, Kisii, Mombasa" 
+                                   value="{{ search_query }}" required>
+                            <small class="text-muted">Try: City names, counties, or specific places in Kenya</small>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-search"></i> Search Weather
+                        </button>
+                    </form>
+                    
+                    <!-- Quick Search Buttons -->
+                    <div class="mt-3">
+                        <p class="mb-2"><strong>Quick Search:</strong></p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-outline-success quick-search" data-location="Nairobi">Nairobi</button>
+                            <button class="btn btn-sm btn-outline-success quick-search" data-location="Kisii">Kisii</button>
+                            <button class="btn btn-sm btn-outline-success quick-search" data-location="Mombasa">Mombasa</button>
+                            <button class="btn btn-sm btn-outline-success quick-search" data-location="Nakuru">Nakuru</button>
+                            <button class="btn btn-sm btn-outline-success quick-search" data-location="Eldoret">Eldoret</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather Results -->
+    {% if weather %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cloud-sun-fill"></i> Weather Information
+                        {% if is_current_location %}
+                        <span class="badge bg-primary float-end">Your Location</span>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Location Info -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5><i class="bi bi-pin-map-fill"></i> {{ location.location }}</h5>
+                            <p class="text-muted mb-0">
+                                <i class="bi bi-geo"></i> 
+                                Coordinates: {{ location.latitude|floatformat:4 }}, {{ location.longitude|floatformat:4 }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Weather Data -->
+                    <div class="row text-center">
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-thermometer-half text-danger" style="font-size: 3rem;"></i>
+                                <h3 class="mt-2 mb-0">{{ weather.temperature }}°C</h3>
+                                <p class="text-muted mb-0">Temperature</p>
+                                {% if weather.feels_like %}
+                                <small class="text-muted">Feels like {{ weather.feels_like }}°C</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-droplet-fill text-primary" style="font-size: 3rem;"></i>
+                                <h3 class="mt-2 mb-0">{{ weather.humidity }}%</h3>
+                                <p class="text-muted mb-0">Humidity</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-wind text-success" style="font-size: 3rem;"></i>
+                                <h3 class="mt-2 mb-0">{{ weather.wind_speed }} m/s</h3>
+                                <p class="text-muted mb-0">Wind Speed</p>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="p-3 bg-light rounded">
+                                <i class="bi bi-cloud-rain-fill text-info" style="font-size: 3rem;"></i>
+                                <h3 class="mt-2 mb-0">{{ weather.rainfall }} mm</h3>
+                                <p class="text-muted mb-0">Rainfall</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weather Description -->
+                    <div class="row mt-3">
+                        <div class="col-12 text-center">
+                            <div class="alert alert-info">
+                                <h5><i class="bi bi-cloud"></i> {{ weather.description|title }}</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Info -->
+                    {% if weather.pressure or weather.uv_index %}
+                    <div class="row mt-3">
+                        {% if weather.pressure %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-speedometer2 me-2" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <strong>Pressure:</strong> {{ weather.pressure }} hPa
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if weather.uv_index %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-sun me-2" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <strong>UV Index:</strong> {{ weather.uv_index }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <a href="{% url 'current_location_weather' %}" class="btn btn-primary">
+                                <i class="bi bi-arrow-clockwise"></i> Search Another Location
+                            </a>
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-house"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Climate Analysis Section -->
+    {% if climate_analysis %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-{% if climate_analysis.climate.is_desert %}warning{% else %}success{% endif %}">
+                <div class="card-header bg-{% if climate_analysis.climate.is_desert %}warning{% else %}success{% endif %} text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-globe"></i> Climate Analysis & Agricultural Suitability
+                        {% if climate_analysis.climate.is_desert %}
+                        <span class="badge bg-danger float-end">DESERT CLIMATE</span>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Climate Classification -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-thermometer"></i> Climate Type</h5>
+                            <div class="alert alert-{% if climate_analysis.climate.is_desert %}warning{% else %}info{% endif %}">
+                                <h4 class="mb-2">{{ climate_analysis.climate.climate_type }}</h4>
+                                <p class="mb-0">{{ climate_analysis.climate.description }}</p>
+                                <small class="text-muted">Climate Code: {{ climate_analysis.climate.climate_code }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-droplet"></i> Water Status</h5>
+                            <div class="alert alert-{% if 'Critical' in climate_analysis.water_status %}danger{% elif 'Low' in climate_analysis.water_status %}warning{% else %}success{% endif %}">
+                                <h5 class="mb-0">{{ climate_analysis.water_status }}</h5>
+                            </div>
+                            <div class="mt-2">
+                                <strong>Agricultural Potential:</strong>
+                                <span class="badge bg-{% if climate_analysis.agricultural_potential == 'excellent' %}success{% elif climate_analysis.agricultural_potential == 'good' %}primary{% elif climate_analysis.agricultural_potential == 'limited' %}warning{% else %}danger{% endif %} fs-6">
+                                    {{ climate_analysis.agricultural_potential|upper }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Suitable Crops -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5><i class="bi bi-flower1"></i> Crop Suitability</h5>
+                            
+                            {% if climate_analysis.suitable_crops.warning %}
+                            <div class="alert alert-danger">
+                                <strong>{{ climate_analysis.suitable_crops.warning }}</strong>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-success text-white h-100">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-check-circle"></i> Suitable Crops</h6>
+                                            <ul class="mb-0">
+                                                {% for crop in climate_analysis.suitable_crops.suitable %}
+                                                <li>{{ crop }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-warning text-dark h-100">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-exclamation-circle"></i> Possible (with care)</h6>
+                                            <ul class="mb-0">
+                                                {% for crop in climate_analysis.suitable_crops.possible %}
+                                                <li>{{ crop }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-danger text-white h-100">
+                                        <div class="card-body">
+                                            <h6><i class="bi bi-x-circle"></i> Not Suitable</h6>
+                                            <ul class="mb-0">
+                                                {% for crop in climate_analysis.suitable_crops.not_suitable %}
+                                                <li>{{ crop }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info mt-3">
+                                <strong><i class="bi bi-droplet-fill"></i> Irrigation:</strong> {{ climate_analysis.suitable_crops.irrigation }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="row">
+                        <div class="col-12">
+                            <h5><i class="bi bi-lightbulb"></i> Agricultural Recommendations</h5>
+                            <div class="list-group">
+                                {% for recommendation in climate_analysis.recommendations %}
+                                <div class="list-group-item">
+                                    {{ recommendation }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Alternative Locations -->
+    {% if all_results and all_results|length > 1 %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-list"></i> Other Matching Locations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for result in all_results %}
+                        {% if forloop.counter > 1 %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ result.display_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-geo"></i> {{ result.latitude|floatformat:4 }}, {{ result.longitude|floatformat:4 }}
+                                    </small>
+                                </div>
+                                <form method="post" action="{% url 'current_location_weather' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="latitude" value="{{ result.latitude }}">
+                                    <input type="hidden" name="longitude" value="{{ result.longitude }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-cloud"></i> Get Weather
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<!-- Hidden form for current location -->
+<form id="currentLocationForm" method="post" action="{% url 'current_location_weather' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" id="latitude" name="latitude">
+    <input type="hidden" id="longitude" name="longitude">
+</form>
+
+<script>
+// Detect current location
+document.getElementById('detectLocationBtn').addEventListener('click', function() {
+    const statusDiv = document.getElementById('locationStatus');
+    const btn = this;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Detecting...';
+    statusDiv.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle"></i> Requesting location permission... Please allow when prompted.</div>';
+    
+    if ('geolocation' in navigator) {
+        // Try with high accuracy first
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                // Success
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+                
+                statusDiv.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Location detected! Lat: ' + 
+                    position.coords.latitude.toFixed(4) + ', Lon: ' + position.coords.longitude.toFixed(4) + 
+                    '<br>Getting weather data...</div>';
+                
+                // Submit form
+                setTimeout(function() {
+                    document.getElementById('currentLocationForm').submit();
+                }, 500);
+            },
+            function(error) {
+                // If high accuracy fails, try without it
+                console.log('High accuracy failed, trying low accuracy...', error);
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        // Success with low accuracy
+                        document.getElementById('latitude').value = position.coords.latitude;
+                        document.getElementById('longitude').value = position.coords.longitude;
+                        
+                        statusDiv.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Location detected (approximate)! Getting weather...</div>';
+                        
+                        setTimeout(function() {
+                            document.getElementById('currentLocationForm').submit();
+                        }, 500);
+                    },
+                    function(error2) {
+                        // Both attempts failed
+                        let errorMsg = 'Unable to detect location. ';
+                        let suggestions = '';
+                        
+                        switch(error2.code) {
+                            case error2.PERMISSION_DENIED:
+                                errorMsg += 'Location access was denied.';
+                                suggestions = '<br><small>💡 <strong>How to fix:</strong><br>' +
+                                    '1. Click the location icon in your browser address bar<br>' +
+                                    '2. Allow location access for this site<br>' +
+                                    '3. Refresh the page and try again</small>';
+                                break;
+                            case error2.POSITION_UNAVAILABLE:
+                                errorMsg += 'Location information is unavailable.';
+                                suggestions = '<br><small>💡 Try using the search feature instead</small>';
+                                break;
+                            case error2.TIMEOUT:
+                                errorMsg += 'Location request timed out.';
+                                suggestions = '<br><small>💡 <strong>Try:</strong><br>' +
+                                    '1. Check your internet connection<br>' +
+                                    '2. Enable location services on your device<br>' +
+                                    '3. Try again or use the search feature</small>';
+                                break;
+                        }
+                        
+                        statusDiv.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> ' + 
+                            errorMsg + suggestions + '</div>';
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-crosshair"></i> Try Again';
+                    },
+                    {
+                        enableHighAccuracy: false,
+                        timeout: 15000,
+                        maximumAge: 300000
+                    }
+                );
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 20000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        statusDiv.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Geolocation is not supported by your browser.<br>' +
+            '<small>Please use the search feature instead.</small></div>';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-crosshair"></i> Detect My Location';
+    }
+});
+
+// Quick search buttons
+document.querySelectorAll('.quick-search').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        document.getElementById('locationSearch').value = this.dataset.location;
+        this.closest('form').submit();
+    });
+});
+</script>
+
+<style>
+.gap-2 {
+    gap: 0.5rem;
+}
+</style>
+{% endblock %}

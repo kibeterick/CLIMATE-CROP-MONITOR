@@ -407,3 +407,139 @@ def farm_statistics(request, farm_id):
         'weather_records': weather_records,
     }
     return render(request, 'monitor/farm_statistics.html', context)
+
+
+@login_required
+def current_location_weather(request):
+    """Get weather for user's current location - PUBLIC ACCESS"""
+    if request.method == 'POST':
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
+        
+        if latitude and longitude:
+            from .location_service import LocationService
+            from .climate_classifier import ClimateClassifier
+            
+            result = LocationService.get_current_location_weather(
+                float(latitude),
+                float(longitude)
+            )
+            
+            if result:
+                # Add climate classification
+                climate_analysis = ClimateClassifier.analyze_location_climate(
+                    float(latitude),
+                    float(longitude),
+                    result['weather']
+                )
+                
+                context = {
+                    'location': result['location'],
+                    'weather': result['weather'],
+                    'climate_analysis': climate_analysis,
+                    'is_current_location': True
+                }
+                return render(request, 'monitor/location_weather.html', context)
+    
+    return render(request, 'monitor/location_weather.html')
+
+
+def search_location_weather(request):
+    """Search for a location and get its weather - PUBLIC ACCESS"""
+    context = {}
+    
+    if request.method == 'POST':
+        location_name = request.POST.get('location_search')
+        
+        if location_name:
+            from .location_service import LocationService
+            from .climate_classifier import ClimateClassifier
+            
+            result = LocationService.search_location_weather(location_name)
+            
+            if result:
+                # Add climate classification
+                climate_analysis = ClimateClassifier.analyze_location_climate(
+                    result['location']['latitude'],
+                    result['location']['longitude'],
+                    result['weather']
+                )
+                
+                context = {
+                    'location': result['location'],
+                    'weather': result['weather'],
+                    'climate_analysis': climate_analysis,
+                    'all_results': result['all_results'],
+                    'search_query': location_name,
+                    'is_current_location': False
+                }
+            else:
+                messages.error(request, f'Location "{location_name}" not found. Try a different search.')
+    
+    return render(request, 'monitor/location_weather.html', context)
+
+
+
+@login_required
+def soil_measurement_create(request, farm_id):
+    """Create new soil measurement"""
+    farm = get_object_or_404(Farm, id=farm_id, farmer=request.user.farmer)
+    
+    if request.method == 'POST':
+        from .models import SoilMeasurement
+        
+        measurement = SoilMeasurement.objects.create(
+            farm=farm,
+            measurement_date=request.POST.get('measurement_date', timezone.now().date()),
+            ph_level=request.POST['ph_level'],
+            nitrogen=request.POST['nitrogen'],
+            phosphorus=request.POST['phosphorus'],
+            potassium=request.POST['potassium'],
+            organic_matter=request.POST.get('organic_matter') or None,
+            moisture=request.POST.get('moisture') or None,
+            temperature=request.POST.get('temperature') or None,
+            notes=request.POST.get('notes', '')
+        )
+        
+        # Analyze the measurement
+        measurement.analyze()
+        
+        messages.success(request, 'Soil measurement recorded and analyzed successfully!')
+        return redirect('soil_measurement_detail', measurement_id=measurement.id)
+    
+    return render(request, 'monitor/soil_measurement_form.html', {'farm': farm})
+
+
+@login_required
+def soil_measurement_detail(request, measurement_id):
+    """View soil measurement details"""
+    from .models import SoilMeasurement
+    
+    measurement = get_object_or_404(
+        SoilMeasurement,
+        id=measurement_id,
+        farm__farmer=request.user.farmer
+    )
+    
+    context = {
+        'measurement': measurement,
+        'farm': measurement.farm
+    }
+    
+    return render(request, 'monitor/soil_measurement_detail.html', context)
+
+
+@login_required
+def soil_measurements_list(request, farm_id):
+    """List all soil measurements for a farm"""
+    from .models import SoilMeasurement
+    
+    farm = get_object_or_404(Farm, id=farm_id, farmer=request.user.farmer)
+    measurements = SoilMeasurement.objects.filter(farm=farm)
+    
+    context = {
+        'farm': farm,
+        'measurements': measurements
+    }
+    
+    return render(request, 'monitor/soil_measurements_list.html', context)

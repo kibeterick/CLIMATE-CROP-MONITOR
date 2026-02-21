@@ -29,4 +29,13 @@ urlpatterns = [
     
     # Statistics
     path('farms/<int:farm_id>/statistics/', views.farm_statistics, name='farm_statistics'),
+    
+    # Location-based weather
+    path('weather/current-location/', views.current_location_weather, name='current_location_weather'),
+    path('weather/search/', views.search_location_weather, name='search_location_weather'),
+    
+    # Soil measurements
+    path('farms/<int:farm_id>/soil/create/', views.soil_measurement_create, name='soil_measurement_create'),
+    path('soil/<int:measurement_id>/', views.soil_measurement_detail, name='soil_measurement_detail'),
+    path('farms/<int:farm_id>/soil/', views.soil_measurements_list, name='soil_measurements_list'),
 ]

@@ -1,0 +1,94 @@
+========================================
+CLIMATE CROP MONITOR v2.1.0
+NEW FEATURES READY!
+========================================
+
+Student: ARON SIGEI (IN13/00030/21)
+Supervisor: Dr. Tombe
+Institution: Kisii University
+
+========================================
+WHAT'S NEW?
+========================================
+
+1. CLIMATE CLASSIFICATION
+   - Detects desert/arid zones
+   - Shows suitable crops
+   - Provides irrigation advice
+
+2. SOIL ANALYSIS
+   - Test pH and NPK levels
+   - Get fertilizer recommendations
+   - Track soil health
+
+========================================
+HOW TO START (3 STEPS)
+========================================
+
+STEP 1: Update System
+   Double-click: update_system.bat
+   (This runs database migrations)
+
+STEP 2: Start Server
+   Double-click: quick_start.bat
+   (This starts the system)
+
+STEP 3: Try New Features
+   - Login to your account
+   - Click "Location Weather" (climate)
+   - Click "Soil Analysis" on any farm
+
+========================================
+QUICK GUIDE
+========================================
+
+CLIMATE CLASSIFICATION:
+1. Dashboard → "Location Weather"
+2. Click "Detect My Location" OR search city
+3. View climate type and suitable crops
+4. Follow recommendations
+
+SOIL ANALYSIS:
+1. Go to any farm
+2. Click "Soil Analysis" (yellow button)
+3. Enter pH and NPK values
+4. View results and recommendations
+
+========================================
+DOCUMENTATION
+========================================
+
+Quick Guide:
+   NEW_FEATURES_GUIDE.md
+
+Full Guide:
+   CLIMATE_SOIL_FEATURES.md
+
+What Changed:
+   CHANGELOG.md
+
+Technical Details:
+   V2.1_COMPLETION_SUMMARY.md
+
+========================================
+NEED HELP?
+========================================
+
+1. Read NEW_FEATURES_GUIDE.md
+2. Check troubleshooting section
+3. Review example workflows
+4. Contact supervisor (Dr. Tombe)
+
+========================================
+SYSTEM STATUS
+========================================
+
+Version: 2.1.0
+Status: PRODUCTION READY
+Features: COMPLETE
+Documentation: COMPREHENSIVE
+Testing: PASSED
+
+========================================
+ENJOY THE NEW FEATURES!
+========================================

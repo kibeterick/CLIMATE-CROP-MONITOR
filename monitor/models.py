@@ -168,3 +168,84 @@ class Alert(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.farm.name}"
+
+
+
+class SoilMeasurement(models.Model):
+    """Soil analysis and measurements for farms"""
+    farm = models.ForeignKey(Farm, on_delete=models.CASCADE, related_name='soil_measurements')
+    measurement_date = models.DateField(default=timezone.now)
+    
+    # Soil properties
+    ph_level = models.DecimalField(max_digits=3, decimal_places=1, help_text="Soil pH (0-14)")
+    nitrogen = models.DecimalField(max_digits=5, decimal_places=2, help_text="Nitrogen level (ppm)")
+    phosphorus = models.DecimalField(max_digits=5, decimal_places=2, help_text="Phosphorus level (ppm)")
+    potassium = models.DecimalField(max_digits=5, decimal_places=2, help_text="Potassium level (ppm)")
+    
+    # Additional measurements
+    organic_matter = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Organic matter (%)")
+    moisture = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Soil moisture (%)")
+    temperature = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Soil temperature (°C)")
+    
+    # Analysis results
+    ph_status = models.CharField(max_length=50, blank=True)
+    nutrient_status = models.CharField(max_length=50, blank=True)
+    overall_health = models.CharField(max_length=20, choices=[
+        ('poor', 'Poor'),
+        ('fair', 'Fair'),
+        ('good', 'Good'),
+        ('excellent', 'Excellent')
+    ], default='fair')
+    
+    # Recommendations
+    recommendations = models.TextField(blank=True, help_text="Soil improvement recommendations")
+    
+    # Metadata
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-measurement_date']
+        indexes = [
+            models.Index(fields=['farm', 'measurement_date']),
+        ]
+    
+    def __str__(self):
+        return f"Soil measurement for {self.farm.name} on {self.measurement_date}"
+    
+    def analyze(self):
+        """Analyze soil measurements and generate recommendations"""
+        from .soil_service import SoilAnalysisService
+        
+        # Analyze pH
+        ph_analysis = SoilAnalysisService.analyze_soil_ph(self.ph_level)
+        self.ph_status = ph_analysis['classification']
+        
+        # Analyze nutrients
+        nutrient_analysis = SoilAnalysisService.analyze_nutrients(
+            self.nitrogen, self.phosphorus, self.potassium
+        )
+        
+        # Generate recommendations
+        recs = []
+        recs.extend(ph_analysis['recommendations'])
+        recs.append(f"Nitrogen: {nutrient_analysis['nitrogen']['recommendation']}")
+        recs.append(f"Phosphorus: {nutrient_analysis['phosphorus']['recommendation']}")
+        recs.append(f"Potassium: {nutrient_analysis['potassium']['recommendation']}")
+        
+        if self.moisture:
+            moisture_analysis = SoilAnalysisService.analyze_soil_moisture(self.moisture)
+            recs.append(f"Moisture: {moisture_analysis['recommendation']}")
+        
+        self.recommendations = '\n'.join(recs)
+        
+        # Determine overall health
+        if ph_analysis['status'] in ['good', 'excellent'] and \
+           all(nutrient_analysis[n]['level'] in ['Medium', 'High'] for n in ['nitrogen', 'phosphorus', 'potassium']):
+            self.overall_health = 'excellent'
+        elif ph_analysis['status'] == 'good':
+            self.overall_health = 'good'
+        else:
+            self.overall_health = 'fair'
+        
+        self.save()

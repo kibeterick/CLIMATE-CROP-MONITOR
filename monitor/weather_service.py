@@ -14,16 +14,32 @@ class WeatherService:
     def get_weather_data(latitude, longitude):
         """Fetch current weather data using FREE One Call API 2.5"""
         if not settings.OPENWEATHER_API_KEY or settings.OPENWEATHER_API_KEY == 'PUT_YOUR_FREE_API_KEY_HERE':
-            # Return realistic demo data for students without API key
+            # Return location-appropriate demo data based on coordinates
+            lat = float(latitude)
+            
+            # Estimate climate based on latitude
+            if abs(lat) < 23.5:  # Tropical
+                temp = 28.0
+                humidity = 75.0
+            elif abs(lat) < 35:  # Subtropical
+                temp = 24.0
+                humidity = 65.0
+            elif abs(lat) < 50:  # Temperate (like Kenya highlands)
+                temp = 18.0
+                humidity = 60.0
+            else:  # Cool temperate/Cold (like Dublin, UK)
+                temp = 12.0
+                humidity = 70.0
+            
             return {
-                'temperature': Decimal('23.5'),
-                'humidity': Decimal('68.0'),
+                'temperature': Decimal(str(temp)),
+                'humidity': Decimal(str(humidity)),
                 'wind_speed': Decimal('4.2'),
-                'description': 'Partly cloudy (demo data)',
+                'description': 'Demo data - Add API key for real weather',
                 'rainfall': Decimal('0'),
                 'pressure': Decimal('1013'),
-                'feels_like': Decimal('24.0'),
-                'uv_index': Decimal('5.0')
+                'feels_like': Decimal(str(temp - 1)),
+                'uv_index': Decimal('3.0')
             }
         
         try:

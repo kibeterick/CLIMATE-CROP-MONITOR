@@ -8,12 +8,19 @@ A comprehensive Django-based web application for monitoring crop growth, weather
 
 ## 📋 Project Information
 
-- **Developer**: ARON SIGEI
-- **Registration**: IN13/00030/21
-- **Institution**: Kisii University
-- **Department**: Department of Computing
-- **Supervisor**: Dr. Maake
-- **Year**: 2026
+**Academic Project - Kisii University**
+
+- **Student Developer:** ARON SIGEI
+- **Registration Number:** IN13/00030/21
+- **Institution:** Kisii University
+- **Department:** Department of Computing
+- **Project Supervisor:** Dr. Tombe
+- **Academic Year:** 2025/2026
+- **Project Type:** Final Year Project / Research
+- **Version:** 2.1 (Climate Classification & Soil Analysis)
+
+### Supervision & Guidance
+This project was developed under the supervision of **Dr. Tombe**, whose expertise and guidance have been invaluable in creating a comprehensive agricultural management system that addresses real-world challenges faced by Kenyan farmers.
 
 ## 🎯 Project Overview
 
@@ -23,8 +30,28 @@ The Climate Crop Monitor addresses major challenges in Kenyan agriculture by pro
 - Responding to changing weather patterns
 - Optimizing resource use (water, fertilizer)
 - Improving food security planning
+- **NEW:** Climate classification and desert detection
+- **NEW:** Comprehensive soil analysis and recommendations
 
 ## ✨ Key Features
+
+### � Climate Classification System (NEW in v2.1)
+- **Automatic Climate Detection**: Identifies Desert, Tropical, Temperate, Highland climates
+- **Desert Zone Warnings**: Clear alerts for arid/desert areas
+- **Crop Suitability Analysis**: Shows which crops will thrive in each climate
+- **Water Status Assessment**: Critical, Low, Adequate, or Abundant
+- **Agricultural Potential Rating**: Poor to Excellent
+- **Irrigation Planning**: Climate-specific water requirements
+- **Location-Based Analysis**: Works with GPS or search
+
+### 🧪 Soil Measurement & Analysis (NEW in v2.1)
+- **Comprehensive Soil Testing**: pH, Nitrogen, Phosphorus, Potassium (NPK)
+- **Automatic Analysis**: Instant soil health assessment
+- **Smart Recommendations**: Specific fertilizer and amendment advice
+- **Health Scoring**: Poor, Fair, Good, or Excellent ratings
+- **Historical Tracking**: Monitor soil changes over time
+- **Optional Measurements**: Organic matter, moisture, temperature
+- **Visual Results**: Color-coded displays for easy understanding
 
 ### 🌱 Crop Management
 - Register and track multiple crops across different farms
@@ -270,3 +297,55 @@ See [ENHANCEMENTS.md](ENHANCEMENTS.md) for complete details.
 ---
 
 *Empowering Kenyan farmers with data-driven agricultural insights*
+
+
+---
+
+## 🙏 Acknowledgments
+
+### Project Supervision
+Special thanks to **Dr. Tombe** (Kisii University) for his invaluable supervision, guidance, and support throughout the development of this project. His expertise in agricultural technology and commitment to student success have been instrumental in achieving the project objectives.
+
+### Academic Support
+- **Kisii University** - For providing the academic environment and resources
+- **Department of Computing** - For technical support and facilities
+- **Fellow Students** - For collaboration and feedback
+
+### Technical Resources
+- **OpenWeatherMap** - For providing free weather API access
+- **Django Community** - For excellent documentation and support
+- **GitHub** - For hosting and version control
+- **Open Source Community** - For various libraries and tools
+
+### Inspiration
+This project is dedicated to Kenyan farmers and agricultural communities working towards food security and sustainable farming practices.
+
+---
+
+## 📞 Contact & Support
+
+**Student Developer:** ARON SIGEI  
+**Registration:** IN13/00030/21  
+**Institution:** Kisii University  
+**Supervisor:** Dr. Tombe  
+**GitHub Repository:** https://github.com/kibeterick/CLIMATE-CROP-MONITOR
+
+For academic inquiries or collaboration opportunities, please contact through the university.
+
+---
+
+## 📚 Documentation
+
+Complete project documentation available:
+- `ACKNOWLEDGMENTS.md` - Detailed acknowledgments and project context
+- `ADVANCED_FEATURES.md` - Advanced features documentation
+- `USER_MANUAL.md` - User guide
+- `DEPLOYMENT_GUIDE.md` - Production deployment
+- `TESTING_GUIDE.md` - Testing procedures
+
+---
+
+**Developed with dedication for Kenyan agriculture** 🌾  
+*"Technology for Agriculture, Agriculture for Prosperity"*
+
+**Climate Crop Monitor v2.0** | Kisii University | 2026

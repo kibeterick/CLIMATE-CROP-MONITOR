@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-clipboard-data"></i> Soil Analysis Results</h2>
+            <p class="text-muted">{{ farm.name }} - {{ measurement.measurement_date }}</p>
+        </div>
+    </div>
+
+    <!-- Overall Health Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-{% if measurement.overall_health == 'excellent' %}success{% elif measurement.overall_health == 'good' %}primary{% elif measurement.overall_health == 'fair' %}warning{% else %}danger{% endif %}">
+                <div class="card-header bg-{% if measurement.overall_health == 'excellent' %}success{% elif measurement.overall_health == 'good' %}primary{% elif measurement.overall_health == 'fair' %}warning{% else %}danger{% endif %} text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-heart-pulse"></i> Overall Soil Health: 
+                        <span class="badge bg-light text-dark">{{ measurement.overall_health|upper }}</span>
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Soil Measurements -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-droplet-half" style="font-size: 3rem; color: #0d6efd;"></i>
+                    <h3 class="mt-2 mb-0">{{ measurement.ph_level }}</h3>
+                    <p class="text-muted mb-1">pH Level</p>
+                    <span class="badge bg-info">{{ measurement.ph_status }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-lightning-fill" style="font-size: 3rem; color: #198754;"></i>
+                    <h3 class="mt-2 mb-0">{{ measurement.nitrogen }}</h3>
+                    <p class="text-muted mb-1">Nitrogen (ppm)</p>
+                    <span class="badge bg-success">N</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-fire" style="font-size: 3rem; color: #dc3545;"></i>
+                    <h3 class="mt-2 mb-0">{{ measurement.phosphorus }}</h3>
+                    <p class="text-muted mb-1">Phosphorus (ppm)</p>
+                    <span class="badge bg-danger">P</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-gem" style="font-size: 3rem; color: #ffc107;"></i>
+                    <h3 class="mt-2 mb-0">{{ measurement.potassium }}</h3>
+                    <p class="text-muted mb-1">Potassium (ppm)</p>
+                    <span class="badge bg-warning text-dark">K</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Measurements -->
+    {% if measurement.organic_matter or measurement.moisture or measurement.temperature %}
+    <div class="row mb-4">
+        {% if measurement.organic_matter %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-tree-fill" style="font-size: 2rem; color: #6f4e37;"></i>
+                    <h4 class="mt-2 mb-0">{{ measurement.organic_matter }}%</h4>
+                    <p class="text-muted mb-0">Organic Matter</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if measurement.moisture %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-moisture" style="font-size: 2rem; color: #0dcaf0;"></i>
+                    <h4 class="mt-2 mb-0">{{ measurement.moisture }}%</h4>
+                    <p class="text-muted mb-0">Soil Moisture</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if measurement.temperature %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-thermometer" style="font-size: 2rem; color: #fd7e14;"></i>
+                    <h4 class="mt-2 mb-0">{{ measurement.temperature }}°C</h4>
+                    <p class="text-muted mb-0">Soil Temperature</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Recommendations -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightbulb"></i> Recommendations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for line in measurement.recommendations.splitlines %}
+                        <div class="list-group-item">
+                            <i class="bi bi-check-circle text-success"></i> {{ line }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes -->
+    {% if measurement.notes %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-journal-text"></i> Notes</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ measurement.notes }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="row">
+        <div class="col-12">
+            <a href="{% url 'soil_measurements_list' farm.id %}" class="btn btn-primary">
+                <i class="bi bi-list"></i> View All Measurements
+            </a>
+            <a href="{% url 'soil_measurement_create' farm.id %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> New Measurement
+            </a>
+            <a href="{% url 'farm_detail' farm.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Farm
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

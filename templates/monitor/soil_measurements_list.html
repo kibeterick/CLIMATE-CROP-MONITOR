@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-clipboard-data"></i> Soil Measurement History</h2>
+            <p class="text-muted">{{ farm.name }}</p>
+        </div>
+    </div>
+
+    <!-- Add New Measurement Button -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{% url 'soil_measurement_create' farm.id %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> New Soil Measurement
+            </a>
+            <a href="{% url 'farm_detail' farm.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Farm
+            </a>
+        </div>
+    </div>
+
+    <!-- Measurements List -->
+    {% if measurements %}
+    <div class="row">
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>pH</th>
+                            <th>N-P-K</th>
+                            <th>Overall Health</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for measurement in measurements %}
+                        <tr>
+                            <td>{{ measurement.measurement_date }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ measurement.ph_level }}</span>
+                                <br><small class="text-muted">{{ measurement.ph_status }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">N: {{ measurement.nitrogen }}</span>
+                                <span class="badge bg-danger">P: {{ measurement.phosphorus }}</span>
+                                <span class="badge bg-warning text-dark">K: {{ measurement.potassium }}</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{% if measurement.overall_health == 'excellent' %}success{% elif measurement.overall_health == 'good' %}primary{% elif measurement.overall_health == 'fair' %}warning{% else %}danger{% endif %}">
+                                    {{ measurement.overall_health|upper }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'soil_measurement_detail' measurement.id %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No soil measurements recorded yet. 
+                <a href="{% url 'soil_measurement_create' farm.id %}" class="alert-link">Create your first measurement</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
